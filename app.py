@@ -97,19 +97,20 @@ class ImageViewer:
 
     def update_canvas(self):
         self.canvas.delete("all")
-        
-        if self.image_opened():
-            self.canvas.create_image(self.canvas.winfo_width() // 2, 
-                self.canvas.winfo_height() // 2, 
-                anchor=tk.CENTER, image=self.photo)
-        else:
-            self.canvas.create_text(
+
+        self.canvas.create_text(
                 self.canvas.winfo_width() // 2, self.canvas.winfo_height() // 2,
                 text=f"plainIMG v{VERSION_NUMBER}\nOpen Menu  [Right Click]\nOpen Image [O]\nQuit       [Q]",
                 font=GLOBAL_FONT,
                 fill=("white" if self.use_black_bg.get() else "black"),
                 #justify=tk.CENTER
             )
+
+        if self.image_opened():
+            self.canvas.create_image(self.canvas.winfo_width() // 2, 
+                self.canvas.winfo_height() // 2, 
+                anchor=tk.CENTER, image=self.photo)
+
         
     def get_size(self):
         win_w, win_h = self.root.winfo_width(), self.root.winfo_height()
@@ -140,14 +141,16 @@ if __name__ == "__main__":
     root.configure(bg=BG_COLOR_INIT)
 
     # imageless is when the application starts without an image provided at the start, which causes the starting text to display
+    image_path = None
     if len(sys.argv) > 1:
         image_path = sys.argv[1]
         if not os.path.exists(image_path):
             print(f"[ERROR]: Image path not found '{image_path}', provided in the first argument! Starting with imageless mode.")
-            image_path = ""
+            image_path = None
+
 
     # FOR DEBUG WHILE DEVELOPING
-    image_path = "image.png"
+    #image_path = "image.png"
 
     viewer = ImageViewer(root, image_path)
 
