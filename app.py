@@ -162,8 +162,6 @@ class ImageViewer:
             new_size = (win_w, win_h)
 
         return new_size
-    
-# possibly a bug: the application doesnt exit when you click Q in the terminal. you can only exit it with Q
 
 if __name__ == "__main__":
     root = tk.Tk()
