@@ -4,6 +4,7 @@ import sys
 import os
 
 VERSION_NUMBER = "0.1"
+DEFAULT_SIZE = (800, 600)
 BG_COLOR_INIT = "white"
 GLOBAL_FONT = ("Consolas", 24, "bold")
 
@@ -23,7 +24,7 @@ class ImageViewer:
         #self.photo = ImageTk.PhotoImage(self.img)
         self.open_image()
 
-        self.canvas = tk.Canvas(root, bg=BG_COLOR_INIT, highlightthickness=0)
+        self.canvas = tk.Canvas(root, width=DEFAULT_SIZE[0], height=DEFAULT_SIZE[1], bg=BG_COLOR_INIT, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
 
         self.canvas.bind("<Configure>", self.resize_image)
@@ -72,7 +73,7 @@ class ImageViewer:
         self.resize_image()
 
     def resize_window_to_image(self, event=None):
-        if self.keep_aspect_ratio.get():
+        if self.keep_aspect_ratio.get() and self.image_opened():
             new_size = self.get_size()
             self.root.geometry(f"{new_size[0]}x{new_size[1]}")
         self.update_canvas()
@@ -98,18 +99,18 @@ class ImageViewer:
     def update_canvas(self):
         self.canvas.delete("all")
 
-        self.canvas.create_text(
+        if self.image_opened():
+            self.canvas.create_image(self.canvas.winfo_width() // 2, 
+                self.canvas.winfo_height() // 2, 
+                anchor=tk.CENTER, image=self.photo)
+        else:
+            self.canvas.create_text(
                 self.canvas.winfo_width() // 2, self.canvas.winfo_height() // 2,
                 text=f"plainIMG v{VERSION_NUMBER}\nOpen Menu  [Right Click]\nOpen Image [O]\nQuit       [Q]",
                 font=GLOBAL_FONT,
                 fill=("white" if self.use_black_bg.get() else "black"),
                 #justify=tk.CENTER
             )
-
-        if self.image_opened():
-            self.canvas.create_image(self.canvas.winfo_width() // 2, 
-                self.canvas.winfo_height() // 2, 
-                anchor=tk.CENTER, image=self.photo)
 
         
     def get_size(self):
@@ -125,7 +126,7 @@ class ImageViewer:
         return new_size
 
     def resize_image(self, event=None):
-        if not self.image_opened:
+        if not self.image_opened():
             return
         
         new_size = self.get_size()
@@ -137,7 +138,7 @@ class ImageViewer:
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("plainIMG")
-    root.geometry("800x600")
+    root.geometry(f"{DEFAULT_SIZE[0]}x{DEFAULT_SIZE[1]}")
     root.configure(bg=BG_COLOR_INIT)
 
     # imageless is when the application starts without an image provided at the start, which causes the starting text to display
