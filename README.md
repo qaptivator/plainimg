@@ -6,12 +6,29 @@ _///// as simple as it gets for an image viewer /////_
 
 - install the executable from the latest release
 - run it by using the context menu button in an image (may require you to click "show more")
-  - or by dragging a picture over the exe
-  - or by opening the execuatble and opening the picture with `Right click > Open...`
+  - or by dragging a picture over the executable
+  - or by running the executable and opening the picture with `Right Click > Open Image...` (or just letter `O`)
+  - or by running it through the terminal with first argument being the file path
 
-the main menu is opened with `Right click`.  
-you can also close the window with `Right click > Close`.
+the main menu is opened with `Right Click`.  
+you can also close the window with `Right Click > Quit` or just `Q`.
+to make the window be the size of the image, press `R`.
+
+# introduction
+
+sometimes, i just want to open an image, and pin it somewhere on my display.  
+i can open images with other progrsms like built-in media app or some external one,  
+but there is one thing i always encounter: **application window ui**
+
+a lot of the times, the ui gets in the way of me just SEEING the image.  
+so with this tool, i fixed just that!  
+using this tool, you can view the image easily, because it covers the entire window!
+
+so now, without any obtrusive ui, you can view your images.  
+eventually, i will also add window pinning like PowerToys does.
 
 # build
 
-install requirements with `pip install -r requirements.txt`
+- install requirements with `pip install -r requirements.txt`
+- run the scipt with `python app.py` (also allows an cli argument)
+- build into an exe with `pyinstaller.exe --onefile --icon=icon.ico main.py`
