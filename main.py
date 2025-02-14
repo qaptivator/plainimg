@@ -6,6 +6,8 @@ import os
 
 VERSION_NUMBER = "0.1"
 DEFAULT_SIZE = (800, 600)
+WINDOW_TITLE = "plainIMG"
+WINDOW_TITLE_PINNED = "plainIMG [TOP]"
 BG_COLOR_INIT = "white"
 GLOBAL_FONT = ("Consolas", 24, "bold")
 
@@ -14,6 +16,7 @@ class ImageViewer:
         self.root = root
         self.image_path = image_path
 
+        self.always_on_top = tk.BooleanVar(value=True)
         self.keep_aspect_ratio = tk.BooleanVar(value=True)
         self.use_black_bg = tk.BooleanVar(value=False)
         #self.image_opened = self.image_path is not None
@@ -30,22 +33,25 @@ class ImageViewer:
         self.canvas.bind("<Configure>", self.resize_image)
         self.root.bind("q", self.quit_dummy)
         self.root.bind("o", self.open_image_command)
+        self.root.bind("c", self.close_image)
+        self.root.bind("t", self.toggle_always_on_top)
         self.root.bind("a", self.toggle_keep_aspect_ratio)
         self.root.bind("r", self.resize_window_to_image)
         self.root.bind("b", self.toggle_use_black_bg)
-        self.root.bind("c", self.close_image)
 
         self.menu = tk.Menu(root, tearoff=0)
         self.menu.add_command(label="Open Image... (O)", command=self.open_image_command)
+        self.menu.add_command(label="Close Image (C)", command=self.close_image)
+        self.menu.add_checkbutton(label="Window always on top (T)", variable=self.always_on_top, command=self.toggle_always_on_top)
         self.menu.add_checkbutton(label="Keep aspect ratio (A)", variable=self.keep_aspect_ratio, command=self.toggle_keep_aspect_ratio)
         self.menu.add_command(label="Resize window to image (R)", command=self.resize_window_to_image)
         self.menu.add_checkbutton(label="Use black background (B)", variable=self.use_black_bg, command=self.toggle_use_black_bg)
-        self.menu.add_command(label="Close Image (C)", command=self.close_image)
         self.menu.add_separator()
         self.menu.add_command(label="About")
         self.menu.add_command(label="Quit (Q)", command=self.quit_dummy)
         self.root.bind("<Button-3>", self.show_menu)
 
+        self.update_always_on_top()
         self.update_canvas()
 
     def image_opened(self):
@@ -57,6 +63,16 @@ class ImageViewer:
 
     def show_menu(self, event):
         self.menu.tk_popup(event.x_root, event.y_root)
+
+    def toggle_always_on_top(self, event=None):
+        if event:
+            self.always_on_top.set(not self.always_on_top.get())
+
+        self.update_always_on_top()
+
+    def update_always_on_top(self):
+        self.root.attributes("-topmost", self.always_on_top.get())
+        self.root.title(WINDOW_TITLE_PINNED if self.always_on_top.get() else WINDOW_TITLE)
 
     def toggle_use_black_bg(self, event=None):
         if event:
@@ -165,7 +181,7 @@ class ImageViewer:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.title("plainIMG")
+    root.title(WINDOW_TITLE)
     root.geometry(f"{DEFAULT_SIZE[0]}x{DEFAULT_SIZE[1]}")
     root.configure(bg=BG_COLOR_INIT)
 

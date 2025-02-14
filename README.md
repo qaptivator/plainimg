@@ -13,6 +13,7 @@ _///// as simple as it gets for an image viewer /////_
 the main menu is opened with `Right Click`.  
 you can also close the window with `Right Click > Quit` or just `Q`.
 to make the window be the size of the image, press `R`.
+to make the window always be on top (dont go behind other windows when unfocused), press `T`. you can change it back any time. _this is enabled by default_
 
 # introduction
 
@@ -23,9 +24,8 @@ but there is one thing i always encounter: **application window ui**
 a lot of the times, the ui gets in the way of me just SEEING the image.  
 so with this tool, i fixed just that!  
 using this tool, you can view the image easily, because it covers the entire window!
-
 so now, without any obtrusive ui, you can view your images.  
-eventually, i will also add window pinning like PowerToys does.
+you can also make the window be always an top, so its actually usable (inspired by AlwayOnTop module in PowerToys).
 
 # build
 
