@@ -135,9 +135,10 @@ class ImageViewer:
                 anchor=tk.CENTER, image=self.photo
             )
         else:
+            # should right click be "Right Click" or "RMB"? hmm...
             self.canvas.create_text(
                 actual_size[0] // 2, actual_size[1] // 2,
-                text=f"plainIMG v{VERSION_NUMBER}\nOpen Menu  [Right Click]\nOpen Image [O]\nQuit       [Q]",
+                text=f"plainIMG v{VERSION_NUMBER}\nOpen Menu  [RMB]\nOpen Image [O]\nQuit       [Q]",
                 font=GLOBAL_FONT,
                 fill=("white" if self.use_black_bg.get() else "black"),
                 #justify=tk.CENTER
@@ -161,6 +162,8 @@ class ImageViewer:
             new_size = (win_w, win_h)
 
         return new_size
+    
+# possibly a bug: the application doesnt exit when you click Q in the terminal. you can only exit it with Q
 
 if __name__ == "__main__":
     root = tk.Tk()
@@ -182,4 +185,7 @@ if __name__ == "__main__":
 
     viewer = ImageViewer(root, image_path)
 
-    root.mainloop()
+    try:
+        root.mainloop()
+    except KeyboardInterrupt:
+        pass
