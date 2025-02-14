@@ -30,13 +30,13 @@ class ImageViewer:
 
         self.canvas.bind("<Configure>", self.resize_image)
         self.root.bind("q", self.quit_dummy)
-        self.root.bind("o", self.open_image_button)
+        self.root.bind("o", self.open_image_command)
         self.root.bind("a", self.toggle_keep_aspect_ratio)
         self.root.bind("r", self.resize_window_to_image)
         self.root.bind("b", self.toggle_use_black_bg)
 
         self.menu = tk.Menu(root, tearoff=0)
-        self.menu.add_command(label="Open Image... (O)")
+        self.menu.add_command(label="Open Image... (O)", command=self.open_image_command)
         self.menu.add_checkbutton(label="Keep aspect ratio (A)", variable=self.keep_aspect_ratio, command=self.toggle_keep_aspect_ratio)
         self.menu.add_command(label="Resize window to image (R)", command=self.resize_window_to_image)
         self.menu.add_checkbutton(label="Use black background (B)", variable=self.use_black_bg, command=self.toggle_use_black_bg)
@@ -81,16 +81,19 @@ class ImageViewer:
         
         self.update_canvas()
 
-    def open_image_button(self, event=None):
+    def open_image_command(self, event=None):
         file_path = filedialog.askopenfilename(
             title="Select an Image",
             filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.gif;*.bmp;*.tiff")]
         )
+        # in this case, we just ignore it, because the user couldve clicked "Cancel"
         if file_path:
-            self.image_path = file_path
-            self.open_image()
-        else:
-            print(f"[ERROR]: Image path not found '{image_path}', provided in the file dialog! Continuing with imageless mode.")
+            if os.path.exists(file_path):
+                self.image_path = file_path
+                self.open_image()
+            else:
+                print(f"[ERROR]: Image path not found '{image_path}', provided in the file dialog! Continuing with imageless mode.")
+            
 
     # IMAGE HANDLING
     def open_image(self):
@@ -103,16 +106,32 @@ class ImageViewer:
 
         self.resize_image()
 
+    def resize_image(self, event=None):
+        if not self.image_opened():
+            self.update_canvas()
+            return
+        
+        new_size = self.get_size()
+        resized_img = self.img_original.resize(new_size, Image.Resampling.LANCZOS)
+        self.photo = ImageTk.PhotoImage(resized_img)
+
+        self.update_canvas()
+
     def update_canvas(self):
         self.canvas.delete("all")
 
+        # apparently on initalization of tkinter window, winfo_width and height return 0 (or 1)
         if self.image_opened():
             self.canvas.create_image(self.canvas.winfo_width() // 2, 
                 self.canvas.winfo_height() // 2, 
                 anchor=tk.CENTER, image=self.photo)
         else:
+            actual_size = (self.canvas.winfo_width(), self.canvas.winfo_height())
+            if (actual_size[0] == 0 or actual_size[1] == 0) or (actual_size[0] == 1 or actual_size[1] == 1):
+                actual_size = DEFAULT_SIZE
+            
             self.canvas.create_text(
-                self.canvas.winfo_width() // 2, self.canvas.winfo_height() // 2,
+                actual_size[0] // 2, actual_size[1] // 2,
                 text=f"plainIMG v{VERSION_NUMBER}\nOpen Menu  [Right Click]\nOpen Image [O]\nQuit       [Q]",
                 font=GLOBAL_FONT,
                 fill=("white" if self.use_black_bg.get() else "black"),
@@ -131,16 +150,6 @@ class ImageViewer:
             new_size = (win_w, win_h)
 
         return new_size
-
-    def resize_image(self, event=None):
-        if not self.image_opened():
-            return
-        
-        new_size = self.get_size()
-        resized_img = self.img_original.resize(new_size, Image.Resampling.LANCZOS)
-        self.photo = ImageTk.PhotoImage(resized_img)
-
-        self.update_canvas()
 
 if __name__ == "__main__":
     root = tk.Tk()
