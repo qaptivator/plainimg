@@ -13,20 +13,19 @@ class ImageViewer:
     def __init__(self, root, image_path=None):
         self.root = root
         self.image_path = image_path
-        #self.image_opened = self.image_path is not None
 
         self.keep_aspect_ratio = tk.BooleanVar(value=True)
         self.use_black_bg = tk.BooleanVar(value=False)
-
-        #self.root.overrideredirect(True)
-
+        #self.image_opened = self.image_path is not None
         #self.img = Image.open(image_path)
         #self.img_original = self.img.copy() 
         #self.photo = ImageTk.PhotoImage(self.img)
-        self.open_image()
+        #self.open_image()
+        #self.root.overrideredirect(True)
 
         self.canvas = tk.Canvas(root, width=DEFAULT_SIZE[0], height=DEFAULT_SIZE[1], bg=BG_COLOR_INIT, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
+        self.open_image()
 
         self.canvas.bind("<Configure>", self.resize_image)
         self.root.bind("q", self.quit_dummy)
@@ -34,12 +33,14 @@ class ImageViewer:
         self.root.bind("a", self.toggle_keep_aspect_ratio)
         self.root.bind("r", self.resize_window_to_image)
         self.root.bind("b", self.toggle_use_black_bg)
+        self.root.bind("c", self.close_image)
 
         self.menu = tk.Menu(root, tearoff=0)
         self.menu.add_command(label="Open Image... (O)", command=self.open_image_command)
         self.menu.add_checkbutton(label="Keep aspect ratio (A)", variable=self.keep_aspect_ratio, command=self.toggle_keep_aspect_ratio)
         self.menu.add_command(label="Resize window to image (R)", command=self.resize_window_to_image)
         self.menu.add_checkbutton(label="Use black background (B)", variable=self.use_black_bg, command=self.toggle_use_black_bg)
+        self.menu.add_command(label="Close Image (C)", command=self.close_image)
         self.menu.add_separator()
         self.menu.add_command(label="About")
         self.menu.add_command(label="Quit (Q)", command=self.quit_dummy)
@@ -76,7 +77,7 @@ class ImageViewer:
 
     def resize_window_to_image(self, event=None):
         if self.keep_aspect_ratio.get() and self.image_opened():
-            new_size = self.get_size()
+            new_size = self.get_image_size()
             self.root.geometry(f"{new_size[0]}x{new_size[1]}")
         
         self.update_canvas()
@@ -93,11 +94,17 @@ class ImageViewer:
                 self.open_image()
             else:
                 print(f"[ERROR]: Image path not found '{image_path}', provided in the file dialog! Continuing with imageless mode.")
-            
+    
+    # checkbuttons return an event, but commands or keybinds dont
+    def close_image(self, event=None):
+        if self.image_opened():
+            self.image_path = None
+            self.resize_image()
 
     # IMAGE HANDLING
     def open_image(self):
         if not self.image_opened():
+            self.resize_image()
             return
 
         self.img = Image.open(self.image_path)
@@ -111,7 +118,7 @@ class ImageViewer:
             self.update_canvas()
             return
         
-        new_size = self.get_size()
+        new_size = self.get_image_size()
         resized_img = self.img_original.resize(new_size, Image.Resampling.LANCZOS)
         self.photo = ImageTk.PhotoImage(resized_img)
 
@@ -119,17 +126,15 @@ class ImageViewer:
 
     def update_canvas(self):
         self.canvas.delete("all")
+        actual_size = self.get_window_size()
 
         # apparently on initalization of tkinter window, winfo_width and height return 0 (or 1)
         if self.image_opened():
-            self.canvas.create_image(self.canvas.winfo_width() // 2, 
-                self.canvas.winfo_height() // 2, 
-                anchor=tk.CENTER, image=self.photo)
+            self.canvas.create_image(
+                actual_size[0] // 2, actual_size[1] // 2,
+                anchor=tk.CENTER, image=self.photo
+            )
         else:
-            actual_size = (self.canvas.winfo_width(), self.canvas.winfo_height())
-            if (actual_size[0] == 0 or actual_size[1] == 0) or (actual_size[0] == 1 or actual_size[1] == 1):
-                actual_size = DEFAULT_SIZE
-            
             self.canvas.create_text(
                 actual_size[0] // 2, actual_size[1] // 2,
                 text=f"plainIMG v{VERSION_NUMBER}\nOpen Menu  [Right Click]\nOpen Image [O]\nQuit       [Q]",
@@ -138,9 +143,15 @@ class ImageViewer:
                 #justify=tk.CENTER
             )
 
+    def get_window_size(self):
+        actual_size = (self.canvas.winfo_width(), self.canvas.winfo_height())
+        if (actual_size[0] == 0 or actual_size[1] == 0) or (actual_size[0] == 1 or actual_size[1] == 1):
+            actual_size = DEFAULT_SIZE
+        return actual_size
         
-    def get_size(self):
-        win_w, win_h = self.root.winfo_width(), self.root.winfo_height()
+    def get_image_size(self):
+        win_w, win_h = self.get_window_size()
+        #win_w, win_h = self.root.winfo_width(), self.root.winfo_height()
         img_w, img_h = self.img_original.size
 
         if self.keep_aspect_ratio.get():
