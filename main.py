@@ -184,6 +184,7 @@ if __name__ == "__main__":
     root.title(WINDOW_TITLE)
     root.geometry(f"{DEFAULT_SIZE[0]}x{DEFAULT_SIZE[1]}")
     root.configure(bg=BG_COLOR_INIT)
+    root.iconbitmap('icon.ico')
 
     # imageless is when the application starts without an image provided at the start, which causes the starting text to display
     image_path = None

@@ -27,6 +27,8 @@ using this tool, you can view the image easily, because it covers the entire win
 so now, without any obtrusive ui, you can view your images.  
 you can also make the window be always an top, so its actually usable (inspired by AlwayOnTop module in PowerToys).
 
+as of now, pyinstaller just doesnt work great, so the current goal is to compile this python script into a standalone executable, or even a windows app.
+
 # build
 
 - install requirements with `pip install -r requirements.txt`
