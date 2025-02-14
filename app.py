@@ -1,21 +1,27 @@
 from PIL import Image, ImageTk
 import tkinter as tk
+import sys
+import os
 
+VERSION_NUMBER = "0.1"
 BG_COLOR_INIT = "white"
+GLOBAL_FONT = ("Consolas", 24, "bold")
 
 class ImageViewer:
-    def __init__(self, root, image_path):
+    def __init__(self, root, image_path=None):
         self.root = root
         self.image_path = image_path
+        #self.image_opened = self.image_path is not None
 
         self.keep_aspect_ratio = tk.BooleanVar(value=True)
         self.use_black_bg = tk.BooleanVar(value=False)
 
         #self.root.overrideredirect(True)
 
-        self.img = Image.open(image_path)
-        self.img_original = self.img.copy() 
-        self.photo = ImageTk.PhotoImage(self.img)
+        #self.img = Image.open(image_path)
+        #self.img_original = self.img.copy() 
+        #self.photo = ImageTk.PhotoImage(self.img)
+        self.open_image()
 
         self.canvas = tk.Canvas(root, bg=BG_COLOR_INIT, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
@@ -28,7 +34,7 @@ class ImageViewer:
         self.root.bind("b", self.toggle_use_black_bg)
 
         self.menu = tk.Menu(root, tearoff=0)
-        self.menu.add_command(label="Open... (O)")
+        self.menu.add_command(label="Open Image... (O)")
         self.menu.add_checkbutton(label="Keep aspect ratio (A)", variable=self.keep_aspect_ratio, command=self.toggle_keep_aspect_ratio)
         self.menu.add_command(label="Resize window to image (R)", command=self.resize_window_to_image)
         self.menu.add_checkbutton(label="Use black background (B)", variable=self.use_black_bg, command=self.toggle_use_black_bg)
@@ -37,8 +43,12 @@ class ImageViewer:
         self.menu.add_command(label="Quit (Q)", command=self.quit_dummy)
         self.root.bind("<Button-3>", self.show_menu)
 
-        self.update_image()
+        self.update_canvas()
 
+    def image_opened(self):
+        return self.image_path is not None
+
+    # MENU BUTTONS
     def quit_dummy(self, event=None):
         self.root.quit()
 
@@ -53,6 +63,8 @@ class ImageViewer:
             self.canvas.config(bg="black")
         else:
             self.canvas.config(bg="white")
+        
+        self.update_canvas()
 
     def toggle_keep_aspect_ratio(self, event=None):
         if event:
@@ -63,12 +75,41 @@ class ImageViewer:
         if self.keep_aspect_ratio.get():
             new_size = self.get_size()
             self.root.geometry(f"{new_size[0]}x{new_size[1]}")
+        self.update_canvas()
 
-    def update_image(self):
+    def open_image_button(self):
+        file_path = tk.filedialog.askopenfilename(
+            title="Select an Image",
+            filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.gif;*.bmp;*.tiff")]
+        )
+        if file_path:
+            self.image_path = file_path
+            self.open_image()
+
+    # IMAGE HANDLING
+    def open_image(self):
+        if not self.image_opened():
+            return
+
+        self.img = Image.open(self.image_path)
+        self.img_original = self.img.copy() 
+        self.photo = ImageTk.PhotoImage(self.img)
+
+    def update_canvas(self):
         self.canvas.delete("all")
-        self.canvas.create_image(self.canvas.winfo_width() // 2, 
-                                 self.canvas.winfo_height() // 2, 
-                                 anchor=tk.CENTER, image=self.photo)
+        
+        if self.image_opened():
+            self.canvas.create_image(self.canvas.winfo_width() // 2, 
+                self.canvas.winfo_height() // 2, 
+                anchor=tk.CENTER, image=self.photo)
+        else:
+            self.canvas.create_text(
+                self.canvas.winfo_width() // 2, self.canvas.winfo_height() // 2,
+                text=f"plainIMG v{VERSION_NUMBER}\nOpen Menu  [Right Click]\nOpen Image [O]\nQuit       [Q]",
+                font=GLOBAL_FONT,
+                fill=("white" if self.use_black_bg.get() else "black"),
+                #justify=tk.CENTER
+            )
         
     def get_size(self):
         win_w, win_h = self.root.winfo_width(), self.root.winfo_height()
@@ -83,18 +124,31 @@ class ImageViewer:
         return new_size
 
     def resize_image(self, event=None):
+        if not self.image_opened:
+            return
+        
         new_size = self.get_size()
         resized_img = self.img_original.resize(new_size, Image.Resampling.LANCZOS)
         self.photo = ImageTk.PhotoImage(resized_img)
 
-        self.update_image()
+        self.update_canvas()
 
-root = tk.Tk()
-root.title("plainIMG")
-root.geometry("800x600")
-root.configure(bg=BG_COLOR_INIT)
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("plainIMG")
+    root.geometry("800x600")
+    root.configure(bg=BG_COLOR_INIT)
 
-image_path = "image.png"
-viewer = ImageViewer(root, image_path)
+    # imageless is when the application starts without an image provided at the start, which causes the starting text to display
+    if len(sys.argv) > 1:
+        image_path = sys.argv[1]
+        if not os.path.exists(image_path):
+            print(f"[ERROR]: Image path not found '{image_path}', provided in the first argument! Starting with imageless mode.")
+            image_path = ""
 
-root.mainloop()
+    # FOR DEBUG WHILE DEVELOPING
+    image_path = "image.png"
+
+    viewer = ImageViewer(root, image_path)
+
+    root.mainloop()
