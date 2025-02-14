@@ -1,5 +1,6 @@
 from PIL import Image, ImageTk
 import tkinter as tk
+from tkinter import filedialog
 import sys
 import os
 
@@ -29,7 +30,7 @@ class ImageViewer:
 
         self.canvas.bind("<Configure>", self.resize_image)
         self.root.bind("q", self.quit_dummy)
-        self.root.bind("o", self.toggle_keep_aspect_ratio)
+        self.root.bind("o", self.open_image_button)
         self.root.bind("a", self.toggle_keep_aspect_ratio)
         self.root.bind("r", self.resize_window_to_image)
         self.root.bind("b", self.toggle_use_black_bg)
@@ -70,22 +71,26 @@ class ImageViewer:
     def toggle_keep_aspect_ratio(self, event=None):
         if event:
             self.keep_aspect_ratio.set(not self.keep_aspect_ratio.get())
+        
         self.resize_image()
 
     def resize_window_to_image(self, event=None):
         if self.keep_aspect_ratio.get() and self.image_opened():
             new_size = self.get_size()
             self.root.geometry(f"{new_size[0]}x{new_size[1]}")
+        
         self.update_canvas()
 
-    def open_image_button(self):
-        file_path = tk.filedialog.askopenfilename(
+    def open_image_button(self, event=None):
+        file_path = filedialog.askopenfilename(
             title="Select an Image",
             filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.gif;*.bmp;*.tiff")]
         )
         if file_path:
             self.image_path = file_path
             self.open_image()
+        else:
+            print(f"[ERROR]: Image path not found '{image_path}', provided in the file dialog! Continuing with imageless mode.")
 
     # IMAGE HANDLING
     def open_image(self):
@@ -95,6 +100,8 @@ class ImageViewer:
         self.img = Image.open(self.image_path)
         self.img_original = self.img.copy() 
         self.photo = ImageTk.PhotoImage(self.img)
+
+        self.resize_image()
 
     def update_canvas(self):
         self.canvas.delete("all")
