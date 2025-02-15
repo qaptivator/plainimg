@@ -3,14 +3,19 @@ import tkinter as tk
 from tkinter import filedialog
 import sys
 import os
-from ctypes import windll, c_int
+#from ctypes import windll, c_int
 
 VERSION_NUMBER = "0.1"
 DEFAULT_SIZE = (800, 600)
+MIN_SIZE = (200, 150)
 WINDOW_TITLE = "plainIMG"
 WINDOW_TITLE_PINNED = "plainIMG [TOP]"
 BG_COLOR_INIT = "white"
 GLOBAL_FONT = ("Consolas", 24, "bold")
+
+# lite mode makes the window as basic as posible, removing the title bar and regular handling provided by windows
+# i have added an option for this because i feel like this functionality can break really easily, because i handle everything in the window now
+LITE_MODE = True
 
 class ImageViewer:
     def __init__(self, root, image_path=None):
@@ -29,18 +34,27 @@ class ImageViewer:
         #self.photo = ImageTk.PhotoImage(self.img)
         #self.open_image()
         
-        self.root.overrideredirect(True)
+        if LITE_MODE:
+            self.root.overrideredirect(True)
 
-        # Make draggable
-        self.root.bind("<ButtonPress-1>", self.start_move)
-        self.root.bind("<B1-Motion>", self.on_move)
-        self.move_x = 0
-        self.move_y = 0
+            # drag
+            self.move_x = 0
+            self.move_y = 0
+            self.root.bind("<ButtonPress-1>", self.start_move)
+            self.root.bind("<B1-Motion>", self.on_move)
 
-        # Apply rounded corners (Windows only)
-        if self.platform.get('win'):
-            hwnd = windll.user32.GetParent(self.root.winfo_id())
-            windll.dwmapi.DwmSetWindowAttribute(hwnd, 2, c_int(1), 4) # TRUE is literally just 1 (windll.user32.TRUE)
+            # resize
+            self.resizing = False
+            self.bind("<Motion>", self.check_resize_area)
+            self.bind("<ButtonPress-1>", self.start_resize)
+            self.bind("<B1-Motion>", self.do_resize)
+            self.bind("<ButtonRelease-1>", self.stop_resize)
+
+            # Apply rounded corners (Windows only)
+            #if self.platform.get('win'):
+            #    hwnd = windll.user32.GetParent(self.root.winfo_id())
+            #    windll.dwmapi.DwmSetWindowAttribute(hwnd, 2, c_int(1), 4) # TRUE is literally just 1 (windll.user32.TRUE)
+
 
         self.canvas = tk.Canvas(root, width=DEFAULT_SIZE[0], height=DEFAULT_SIZE[1], bg=BG_COLOR_INIT, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
@@ -74,6 +88,47 @@ class ImageViewer:
         return self.image_path is not None
     
     # WINDOW
+    def check_resize_area(self, event):
+        """Detects if the cursor is near the edges to enable resizing."""
+        border_thickness = 10  # Resize area width
+        x, y, width, height = event.x, event.y, self.winfo_width(), self.winfo_height()
+
+        if x >= width - border_thickness and y >= height - border_thickness:
+            self.config(cursor="bottom_right_corner")  # Bottom-right resize
+            self.resizing = "bottom_right"
+        elif x >= width - border_thickness:
+            self.config(cursor="right_side")  # Right-side resize
+            self.resizing = "right"
+        elif y >= height - border_thickness:
+            self.config(cursor="bottom_side")  # Bottom resize
+            self.resizing = "bottom"
+        else:
+            self.config(cursor="arrow")
+            self.resizing = False
+
+    def start_resize(self, event):
+        """Start resizing when clicking the border."""
+        self.start_x, self.start_y = event.x, event.y
+        self.start_width, self.start_height = self.winfo_width(), self.winfo_height()
+
+    def do_resize(self, event):
+        """Resize the window while dragging the border."""
+        if not self.resizing:
+            return
+
+        if self.resizing in ("right", "bottom_right"):
+            new_width = max(self.min_width, self.start_width + (event.x - self.start_x))
+            self.geometry(f"{new_width}x{self.winfo_height()}")
+
+        if self.resizing in ("bottom", "bottom_right"):
+            new_height = max(self.min_height, self.start_height + (event.y - self.start_y))
+            self.geometry(f"{self.winfo_width()}x{new_height}")
+
+    def stop_resize(self, event):
+        """Stop resizing after releasing the mouse button."""
+        self.resizing = False
+        self.config(cursor="arrow")
+    
     def start_move(self, event):
         self.move_x = event.x
         self.move_y = event.y
@@ -207,6 +262,7 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.title(WINDOW_TITLE)
     root.geometry(f"{DEFAULT_SIZE[0]}x{DEFAULT_SIZE[1]}")
+    root.minsize(MIN_SIZE[0], MIN_SIZE[1])
     root.configure(bg=BG_COLOR_INIT)
     root.iconbitmap('icon.ico')
 
