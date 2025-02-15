@@ -4,7 +4,7 @@ _///// as simple as it gets for an image viewer /////_
 
 # usage
 
-- install the executable from the latest release
+- install the executable from the latest release (as of now, clone the repository and run `main.py`)
 - run it by using the context menu button in an image (may require you to click "show more")
   - or by dragging a picture over the executable
   - or by running the executable and opening the picture with `Right Click > Open Image...` (or just letter `O`)
