@@ -34,6 +34,9 @@ class ImageViewer:
         #self.photo = ImageTk.PhotoImage(self.img)
         #self.open_image()
         
+        #self.root.wm_attributes("-fullscreen", True)
+        #self.root.wm_attributes('-type', 'splash')
+        #https://stackoverflow.com/questions/39529600/remove-titlebar-without-overrideredirect-using-tkinter
         if LITE_MODE:
             self.root.overrideredirect(True)
 
