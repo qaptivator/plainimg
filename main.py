@@ -45,10 +45,14 @@ class ImageViewer:
 
             # resize
             self.resizing = False
-            self.bind("<Motion>", self.check_resize_area)
-            self.bind("<ButtonPress-1>", self.start_resize)
-            self.bind("<B1-Motion>", self.do_resize)
-            self.bind("<ButtonRelease-1>", self.stop_resize)
+            self.resize_start_x = 0
+            self.resize_start_y = 0
+            self.resize_start_width = 0
+            self.resize_start_height = 0
+            self.root.bind("<Motion>", self.check_resize_area)
+            self.root.bind("<ButtonPress-1>", self.start_resize)
+            self.root.bind("<B1-Motion>", self.do_resize)
+            self.root.bind("<ButtonRelease-1>", self.stop_resize)
 
             # Apply rounded corners (Windows only)
             #if self.platform.get('win'):
@@ -91,25 +95,25 @@ class ImageViewer:
     def check_resize_area(self, event):
         """Detects if the cursor is near the edges to enable resizing."""
         border_thickness = 10  # Resize area width
-        x, y, width, height = event.x, event.y, self.winfo_width(), self.winfo_height()
+        x, y, width, height = event.x, event.y, self.root.winfo_width(), self.root.winfo_height()
 
         if x >= width - border_thickness and y >= height - border_thickness:
-            self.config(cursor="bottom_right_corner")  # Bottom-right resize
+            self.root.config(cursor="bottom_right_corner")  # Bottom-right resize
             self.resizing = "bottom_right"
         elif x >= width - border_thickness:
-            self.config(cursor="right_side")  # Right-side resize
+            self.root.config(cursor="right_side")  # Right-side resize
             self.resizing = "right"
         elif y >= height - border_thickness:
-            self.config(cursor="bottom_side")  # Bottom resize
+            self.root.config(cursor="bottom_side")  # Bottom resize
             self.resizing = "bottom"
         else:
-            self.config(cursor="arrow")
+            self.root.config(cursor="arrow")
             self.resizing = False
 
     def start_resize(self, event):
         """Start resizing when clicking the border."""
-        self.start_x, self.start_y = event.x, event.y
-        self.start_width, self.start_height = self.winfo_width(), self.winfo_height()
+        self.resize_start_x, self.resize_start_y = event.x, event.y
+        self.resize_start_width, self.resize_start_height = self.root.winfo_width(), self.root.winfo_height()
 
     def do_resize(self, event):
         """Resize the window while dragging the border."""
@@ -117,23 +121,24 @@ class ImageViewer:
             return
 
         if self.resizing in ("right", "bottom_right"):
-            new_width = max(self.min_width, self.start_width + (event.x - self.start_x))
-            self.geometry(f"{new_width}x{self.winfo_height()}")
+            new_width = max(MIN_SIZE[0], self.resize_start_width + (event.x - self.resize_start_x))
+            self.root.geometry(f"{new_width}x{self.root.winfo_height()}")
 
         if self.resizing in ("bottom", "bottom_right"):
-            new_height = max(self.min_height, self.start_height + (event.y - self.start_y))
-            self.geometry(f"{self.winfo_width()}x{new_height}")
+            new_height = max(MIN_SIZE[1], self.resize_start_height + (event.y - self.resize_start_y))
+            self.root.geometry(f"{self.root.winfo_width()}x{new_height}")
 
     def stop_resize(self, event):
         """Stop resizing after releasing the mouse button."""
         self.resizing = False
-        self.config(cursor="arrow")
+        self.root.config(cursor="arrow")
     
     def start_move(self, event):
         self.move_x = event.x
         self.move_y = event.y
 
     def on_move(self, event):
+        print('move')
         self.root.geometry(f"+{event.x_root - self.move_x}+{event.y_root - self.move_y}")
 
     # MENU BUTTONS
