@@ -232,8 +232,8 @@ class ImageViewer:
         self.img_original = self.img.copy() 
         self.photo = ImageTk.PhotoImage(self.img)
 
-        self.resize_image()
-        self.resize_window_to_image()
+        self.resize_image(None, True)
+        #self.resize_window_to_image()
 
     def resize_image(self, event=None, resize_window=False):
         if not self.image_opened():
