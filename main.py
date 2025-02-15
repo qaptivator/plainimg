@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog
 import sys
 import os
+from ctypes import windll, c_int
 
 VERSION_NUMBER = "0.1"
 DEFAULT_SIZE = (800, 600)
@@ -15,6 +16,9 @@ class ImageViewer:
     def __init__(self, root, image_path=None):
         self.root = root
         self.image_path = image_path
+        self.platform = {
+            'win': sys.platform.startswith("win"),
+        }
 
         self.always_on_top = tk.BooleanVar(value=True)
         self.keep_aspect_ratio = tk.BooleanVar(value=True)
@@ -24,7 +28,19 @@ class ImageViewer:
         #self.img_original = self.img.copy() 
         #self.photo = ImageTk.PhotoImage(self.img)
         #self.open_image()
-        #self.root.overrideredirect(True)
+        
+        self.root.overrideredirect(True)
+
+        # Make draggable
+        self.root.bind("<ButtonPress-1>", self.start_move)
+        self.root.bind("<B1-Motion>", self.on_move)
+        self.move_x = 0
+        self.move_y = 0
+
+        # Apply rounded corners (Windows only)
+        if self.platform.get('win'):
+            hwnd = windll.user32.GetParent(self.root.winfo_id())
+            windll.dwmapi.DwmSetWindowAttribute(hwnd, 2, c_int(1), 4) # TRUE is literally just 1 (windll.user32.TRUE)
 
         self.canvas = tk.Canvas(root, width=DEFAULT_SIZE[0], height=DEFAULT_SIZE[1], bg=BG_COLOR_INIT, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
@@ -56,6 +72,14 @@ class ImageViewer:
 
     def image_opened(self):
         return self.image_path is not None
+    
+    # WINDOW
+    def start_move(self, event):
+        self.move_x = event.x
+        self.move_y = event.y
+
+    def on_move(self, event):
+        self.root.geometry(f"+{event.x_root - self.move_x}+{event.y_root - self.move_y}")
 
     # MENU BUTTONS
     def quit_dummy(self, event=None):
