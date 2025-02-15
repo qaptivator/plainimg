@@ -233,8 +233,9 @@ class ImageViewer:
         self.photo = ImageTk.PhotoImage(self.img)
 
         self.resize_image()
+        self.resize_window_to_image()
 
-    def resize_image(self, event=None):
+    def resize_image(self, event=None, resize_window=False):
         if not self.image_opened():
             self.update_canvas()
             return
@@ -242,6 +243,9 @@ class ImageViewer:
         new_size = self.get_image_size()
         resized_img = self.img_original.resize(new_size, Image.Resampling.LANCZOS)
         self.photo = ImageTk.PhotoImage(resized_img)
+
+        if self.keep_aspect_ratio.get() and self.image_opened() and resize_window:
+            self.root.geometry(f"{new_size[0]}x{new_size[1]}")
 
         self.update_canvas()
 
