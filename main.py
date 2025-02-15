@@ -15,7 +15,7 @@ GLOBAL_FONT = ("Consolas", 24, "bold")
 
 # lite mode makes the window as basic as posible, removing the title bar and regular handling provided by windows
 # i have added an option for this because i feel like this functionality can break really easily, because i handle everything in the window now
-LITE_MODE = True
+LITE_MODE = False
 
 class ImageViewer:
     def __init__(self, root, image_path=None):
@@ -40,8 +40,8 @@ class ImageViewer:
             # drag
             self.move_x = 0
             self.move_y = 0
-            self.root.bind("<ButtonPress-1>", self.start_move)
-            self.root.bind("<B1-Motion>", self.on_move)
+            #self.root.bind("<ButtonPress-1>", self.start_move)
+            #self.root.bind("<B1-Motion>", self.on_move)
 
             # resize
             self.resizing = False
@@ -49,10 +49,14 @@ class ImageViewer:
             self.resize_start_y = 0
             self.resize_start_width = 0
             self.resize_start_height = 0
-            self.root.bind("<Motion>", self.check_resize_area)
-            self.root.bind("<ButtonPress-1>", self.start_resize)
-            self.root.bind("<B1-Motion>", self.do_resize)
-            self.root.bind("<ButtonRelease-1>", self.stop_resize)
+            #self.root.bind("<Motion>", self.check_resize_area)
+            #self.root.bind("<ButtonPress-1>", self.start_resize)
+            #self.root.bind("<B1-Motion>", self.do_resize)
+            #self.root.bind("<ButtonRelease-1>", self.stop_resize)
+            self.root.bind("<Motion>", self.on_motion)
+            self.root.bind("<ButtonPress-1>", self.on_buttonpress_1)
+            self.root.bind("<B1-Motion>", self.on_b1_motion)
+            self.root.bind("<ButtonRelease-1>", self.on_buttonrelease_1)
 
             # Apply rounded corners (Windows only)
             #if self.platform.get('win'):
@@ -92,6 +96,20 @@ class ImageViewer:
         return self.image_path is not None
     
     # WINDOW
+    def on_motion(self, event):
+        self.check_resize_area(event)
+
+    def on_b1_motion(self, event):
+        self.on_move(event)
+        self.do_resize(event)
+
+    def on_buttonpress_1(self, event):
+        self.start_move(event)
+        self.start_resize(event)
+
+    def on_buttonrelease_1(self, event):
+        self.stop_resize(event)
+
     def check_resize_area(self, event):
         """Detects if the cursor is near the edges to enable resizing."""
         border_thickness = 10  # Resize area width
@@ -138,8 +156,8 @@ class ImageViewer:
         self.move_y = event.y
 
     def on_move(self, event):
-        print('move')
-        self.root.geometry(f"+{event.x_root - self.move_x}+{event.y_root - self.move_y}")
+        if not self.resizing:
+            self.root.geometry(f"+{event.x_root - self.move_x}+{event.y_root - self.move_y}")
 
     # MENU BUTTONS
     def quit_dummy(self, event=None):
