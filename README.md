@@ -2,6 +2,8 @@
 
 _///// as simple as it gets for an image viewer /////_
 
+# MOVED TO [A NEW REPOSITORY](https://github.com/qaptivator/plainimg2)
+
 # usage
 
 - install the executable from the latest release (as of now, clone the repository and run `main.py`)
